@@ -9,7 +9,8 @@ class BahdanauAttention(Model):
     self.W2 = Dense(units)
     self.V = Dense(1)
 
-  def call(self, query, values):
+  def call(self, inputs):
+    query, values = inputs
     # hidden shape == (batch_size, hidden size)
     # hidden_with_time_axis shape == (batch_size, 1, hidden size)
     # we are doing this to perform addition to calculate the score
