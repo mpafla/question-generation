@@ -1,8 +1,11 @@
 import json
+import spacy
+import time
 from gensim.models import Word2Vec
 from utils.preprocessing import *
 from nltk.tokenize import word_tokenize
 
+nlp = spacy.load("en_core_web_sm")
 
 file_path_train = 'data/train-v1.1.json'
 file_path_dev = 'data/dev-v1.1.json'
@@ -47,8 +50,21 @@ squad_dev, ids2context_dev = preprocess_json(json_dev)
 
 #ids = [data["data_id"] for data in squad_train]
 
+print(ids2context_train[0])
 
+start = time.time()
 
+doc = nlp(ids2context_train[0])
+
+print(time.time() - start)
+
+# Analyze syntax
+print("Noun phrases:", [chunk.text for chunk in doc.noun_chunks])
+print("Verbs:", [token.lemma_ for token in doc if token.pos_ == "VERB"])
+
+# Find named entities, phrases and concepts
+for entity in doc.ents:
+    print(entity.text, entity.label_)
 
 
 
