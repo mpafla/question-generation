@@ -4,10 +4,8 @@ from gensim import models
 from gensim.models import KeyedVectors
 from tensorflow.python.keras.utils import to_categorical
 
-
 class Embedder():
-    def __init__(self, vocab_size):
-        self.vocab_size = vocab_size
+    def __init__(self):
         self.wv_path = "models/google_wv"
 
         try:
@@ -46,7 +44,7 @@ class Embedder():
                 "wv": np.append(np.zeros(self.embedding_dim), to_categorical(i, len(self.special_tokens_list)))
             })
 
-    def get_data_for_token(self, data, data_type):
+    def _get_data_for_token(self, data, data_type):
         for special_token in self.special_tokens:
             if data == special_token[data_type]:
                 return (special_token)
@@ -60,11 +58,11 @@ class Embedder():
             elif encoding == "wv":
                 return(np.append(self.wv[token], np.zeros(self.number_of_special_tokens)))
         else:
-            special_token = self.get_data_for_token(token, "token")
+            special_token = self._get_data_for_token(token, "token")
             if special_token is not None:
                 return(special_token[encoding])
             else:
-                return(self.get_data_for_token(self.UNK, "token")[encoding])
+                return(self._get_data_for_token(self.UNK, "token")[encoding])
 
     def from_index(self, index, encoding):
         if index < self.index_len:
@@ -73,18 +71,19 @@ class Embedder():
             elif encoding == "wv":
                 return(np.append(self.wv[self.wv.index2word[index]], np.zeros(self.number_of_special_tokens)))
         else:
-            special_token = self.get_data_for_token(index, "index")
+            special_token = self._get_data_for_token(index, "index")
             if special_token is not None:
                 return(special_token[encoding])
             else:
                 raise Exception("Index {} is not part of vocabulary.".format(index))
 
+embedder = Embedder()
 
-embedder = Embedder(vocab_size=20000)
+print(embedder.from_token("foo", "wv"))
+print(embedder.from_token("foo", "index"))
 
+print(embedder.from_token("<UNK>", "wv"))
+print(embedder.from_token("<UNK>", "index"))
 
-
-
-
-
-
+print(embedder.from_token("skv[okd[vds", "wv"))
+print(embedder.from_token("skv[okd[vds", "index"))
