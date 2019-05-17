@@ -17,7 +17,8 @@ class DatasetCreator():
         self.files_folder_train = os.listdir(self.folder_prefix_train)
         self.files_folder_dev = os.listdir(self.folder_prefix_dev)
         self.padding_value = self.vocab.get_index_for_token(Constants.PAD)
-        self.max_sequence_length = 100
+        self.sequence_length_input = 300
+        self.sequence_length_target = 30
 
 
     def trim_sequence(self, sequence, trim_count, trim):
@@ -26,8 +27,8 @@ class DatasetCreator():
         elif trim == "back":
             return(sequence[:len(sequence) - trim_count])
 
-    def pad_or_trim_sequence(self, sequence, pad, trim):
-        pads_to_add = self.max_sequence_length - len(sequence)
+    def pad_or_trim_sequence(self, sequence, pad, trim, seq_length):
+        pads_to_add = seq_length - len(sequence)
         #padding
         if pads_to_add > 0:
             if pad == "front":
@@ -42,7 +43,7 @@ class DatasetCreator():
         else:
             return(sequence)
 
-    def preprocess_tokens(self, doc, pad, trim):
+    def preprocess_tokens(self, doc, pad="back", trim="back", index_only=False, seq_length=100):
         indices = []
         for token in doc:
             token_lemma = token.lemma_
@@ -51,12 +52,39 @@ class DatasetCreator():
         #Add end of line token
         indices.append(self.vocab.get_index_for_token(Constants.EOS))
 
-        indices = self.pad_or_trim_sequence(indices, pad, trim)
+        if not index_only:
+            indices = self.pad_or_trim_sequence(indices, pad, trim, seq_length)
 
         return indices
 
+    def get_answer_processed(self, answer, context):
+        answer_lemma = []
+        context_lemma = []
+        for token in answer:
+            answer_lemma.append(token.lemma_)
+        for token in context:
+            context_lemma.append(token.lemma_)
+        answer_start = None
+        for i in range(len(context) - len(answer_lemma)):
+            if answer_lemma == context_lemma[i:i+len(answer_lemma)]:
+                answer_start = i
+                break
+
+        answer_processed = np.zeros(len(context))
+
+        if answer_start is not None:
+            for i in range(answer_start, answer_start + len(answer)):
+                if i < len(answer_processed):
+                    answer_processed[i] = 1
+
+        answer_processed = self.pad_or_trim_sequence(list(answer_processed), pad="back", trim="front", seq_length=self.sequence_length_input)
+        return answer_processed
+
+
     def preprocess(self, chunk):
-        data_points = []
+        input = []
+        target = []
+        #data_points = []
 
         for paragraph in chunk["paragraphs"]:
             context = paragraph["context"]
@@ -64,18 +92,30 @@ class DatasetCreator():
             for qa in paragraph["qas"]:
                 question = qa["question"]
                 answer = qa["answers"][0]["text"]
+                answer_start = qa["answers"][0]["answer_start"]
+
+                #because context might be trimmed
+                answer_offset = max(0, len(context) - self.sequence_length_input)
 
                 #max_seq_len = max([len(answer),len(context), len(question)])
 
-                answer_processed = self.preprocess_tokens(answer, pad="back", trim="back")
-                context_processed = self.preprocess_tokens(context, pad="back", trim="front")
-                question_processed = self.preprocess_tokens(question, pad="back", trim="back")
 
-                data_point = (answer_processed, context_processed, question_processed)
+
+                answer_processed = self.get_answer_processed(answer, context)
+                original_answer_processed = self.preprocess_tokens(answer, pad="back", trim="front", seq_length=self.sequence_length_input)
+                context_processed = self.preprocess_tokens(context, pad="back", trim="front", seq_length=self.sequence_length_input)
+                question_processed = self.preprocess_tokens(question, seq_length=self.sequence_length_target)
+
+                #data_point = (answer_processed, context_processed, question_processed)
                 #data_point = (np.ones(3), np.ones(3), np.ones(3))
-                data_points.append(data_point)
+                #data_points.append(data_point)
 
-        return data_points
+                input.append((answer_processed, original_answer_processed, context_processed))
+                target.append(question_processed)
+
+        #return data_points
+        #return np.ones((2,3,2)), np.zeros((2,2))
+        return input, target
 
     def load_and_preprocess(self, chunk_path, files_folder):
 
@@ -89,8 +129,13 @@ class DatasetCreator():
         return self.preprocess(chunk)
 
     def create_sub_dataset(self, chunk_path, files_folder):
-        data_points = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],  [tf.float32, tf.float32, tf.float32])
-        data_set = tf.data.Dataset.from_tensor_slices(data_points)
+        #data_points = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],  [tf.float32, tf.float32, tf.float32])
+        #data_set = tf.data.Dataset.from_tensor_slices(data_points)
+
+        input, target = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],  [tf.float32, tf.float32])
+        input_dataset = tf.data.Dataset.from_tensor_slices(input)
+        target_dataset = tf.data.Dataset.from_tensor_slices(target)
+        data_set = tf.data.Dataset.zip((input_dataset, target_dataset))
 
         return data_set
 
@@ -115,12 +160,10 @@ dataset_train, dataset_dev = dataset_creator.create_datasets()
 start = time.time()
 
 for i, data in enumerate(dataset_train):
-    print(data[0])
-    print(data[1])
-    print(data[2])
-    #if i > 1:
-    #    break
-    break
+    print(data)
+    if i > 1:
+        break
+
 
 print("{} time pased".format(time.time() - start))
 
@@ -139,3 +182,4 @@ print("{} time pased".format(time.time() - start))
         #return wv
         return np.ones(5)
 '''
+

@@ -37,7 +37,6 @@ class Vocabulary:
     def initialize_index_vocabularies(self):
         self.index2token = Constants.index2special_token
         self.token2index = Constants.special_token2index
-        print(self.token2index[Constants.PAD])
         number_of_special_tokens = len(self.index2token.keys())
         for i, token in enumerate(self.vocab_limited.keys(), number_of_special_tokens):
             self.token2index[token] = i

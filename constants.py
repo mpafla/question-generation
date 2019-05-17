@@ -12,4 +12,3 @@ class Constants():
         3: UNK
     }
     special_token2index = {v: k for k, v in index2special_token.items()}
-    print(special_token2index.items())
