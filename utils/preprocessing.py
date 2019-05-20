@@ -1,8 +1,101 @@
 import string
 import numpy as np
+import spacy
 from nltk.tokenize import word_tokenize
 from functools import reduce
 from tensorflow.python.keras.utils import to_categorical
+nlp = spacy.load("en_core_web_sm")
+
+from utils.constants import Constants
+
+PAD_index = Constants.special_token2index[Constants.PAD]
+PAD = Constants.PAD
+
+def get_trimmed_sequence(sequence, final_index, length):
+    return(sequence[final_index - length:final_index])
+
+def get_padded_sequence(sequence, final_index, length):
+    sequence_length = len(sequence)
+    pads_to_add_before = final_index - sequence_length
+    pads_to_add_after = length - final_index
+
+    #Check if all instances in the sequence are str and change PAD symbol accordingly
+    pad_symbol = PAD if all(isinstance(elem, str) for elem in sequence) else PAD_index
+
+    sequence = np.concatenate([[pad_symbol] * pads_to_add_before, sequence, [pad_symbol] * pads_to_add_after])
+    return(sequence)
+
+def get_length_adjusted_sequence(sequence, desired_length, padding_pos = "back", trimming_pos = "front"):
+    values_to_adjust = desired_length - len(sequence)
+
+    # padding
+    if values_to_adjust > 0:
+        if padding_pos == "front":
+            return (get_padded_sequence(sequence, desired_length, desired_length))
+        elif padding_pos == "back":
+            return (get_padded_sequence(sequence, len(sequence), desired_length))
+    # trimming
+    elif values_to_adjust < 0:
+        if trimming_pos == "front":
+            return (get_trimmed_sequence(sequence, len(sequence), desired_length))
+        elif trimming_pos == "back":
+            return (get_trimmed_sequence(sequence, desired_length, desired_length))
+    # do nothing
+    else:
+        return (sequence)
+
+
+def get_answer_processed(answer, context):
+    #answer_lemma = [token.lemma_ for token in answer]
+    #context_lemma = [token.lemma_ for token in context]
+
+    answer_start = None
+    answer_end = None
+    for i in range(len(context) - len(answer)):
+        if answer == context[i:i+len(answer)]:
+            answer_start = i
+            break
+
+    #answer_processed = np.zeros(len(context))
+    answer_processed = np.array([PAD_index] * len(context))
+
+
+    if answer_start is not None:
+        answer_end = answer_start + len(answer)
+        for i in range(answer_start, answer_end):
+            if i < len(answer_processed):
+                answer_processed[i] = 1
+
+    #answer_processed = self.pad_or_trim_sequence(list(answer_processed), pad="back", trim="front", seq_length=self.sequence_length_input)
+    return answer_processed, answer_start, answer_end
+
+#foo = list(range(10))
+#bar = "hello i am very hungry what about you".split()
+#print(get_length_adjusted_sequence(bar, 12, padding_pos = "back", trimming_pos = "front"))
+
+'''
+
+foo = list(range(10))
+print(foo)
+print(get_trimmed_sequence(foo,len(foo), 3))
+print(get_padded_sequence(foo, len(foo), 100))
+print(len(get_padded_sequence(foo, 100, 100)))
+
+example = "I am hungry and I want to eat a burger, please."
+example = nlp(example)
+answer = "eat a burger"
+answer = nlp(answer)
+answer_processed, answer_start, answer_end = get_answer_processed(answer, example)
+print([example.vocab.strings[token.lower] for token in example])
+print(answer_processed)
+print(answer_start)
+print(answer_end)
+
+
+
+if (answer_end is not None):
+    answer_trimmed = get_trimmed_sequence(answer_processed, answer_end, 5)
+    print(answer_trimmed)
 
 SOS = "<SOS>"
 EOS = "<EOS>"
@@ -74,3 +167,11 @@ def createEmbeddingsMatrix(vocabulary_size, W2V_DIM, w2v_model):
         appendix = to_categorical(offset, len_special_tokens)
         embedding_matrix[i] = np.append(np.zeros(W2V_DIM), appendix)
     return (embedding_matrix)
+    
+'''
+
+
+
+
+
+

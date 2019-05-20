@@ -1,7 +1,7 @@
 import pickle
 import string
 from collections import Counter
-from constants import Constants
+from utils.constants import Constants
 
 class Vocabulary:
     def __init__(self):
