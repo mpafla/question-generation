@@ -176,6 +176,7 @@ optimizer = RMSprop(lr=LEARNING_RATE)
 
 
 train_loss = Mean(name='train_loss')
+#Calculates the accuracy by dividing the correct classification by the all instances (independent from sequence length)
 train_accuracy = CategoricalAccuracy(name='train_accuracy')
 
 test_loss = Mean(name='test_loss')

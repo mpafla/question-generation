@@ -1,0 +1,13 @@
+---
+dataset_creator:
+    sequence_length_input: 200
+    sequence_length_target: 30
+    folder_prefix_train: "data/train/"
+    folder_prefix_dev: "data/dev/"
+vocabulary:
+    vocabulary_size: 20000
+    vocab_path: "data/vocab.pickle"
+embedder:
+    wv_path: "models/google_wv"
+    google_w2v_path: "models/GoogleNews-vectors-negative300.bin"
+...

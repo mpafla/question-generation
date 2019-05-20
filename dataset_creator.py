@@ -10,16 +10,16 @@ from utils.preprocessing import *
 
 class DatasetCreator():
     #def __init__(self, vocab, embedder):
-    def __init__(self, vocab):
+    def __init__(self, vocab, config):
         self.vocab = vocab
         #self.embedder = embedder
-        self.folder_prefix_train = "data/train/"
-        self.folder_prefix_dev = "data/dev/"
+        self.folder_prefix_train = config["dataset_creator"]["folder_prefix_train"]
+        self.folder_prefix_dev =  config["dataset_creator"]["folder_prefix_dev"]
         self.files_folder_train = os.listdir(self.folder_prefix_train)
         self.files_folder_dev = os.listdir(self.folder_prefix_dev)
         self.padding_value = self.vocab.get_index_for_token(Constants.PAD)
-        self.sequence_length_input = 200
-        self.sequence_length_target = 30
+        self.sequence_length_input = config["dataset_creator"]["sequence_length_input"]
+        self.sequence_length_target = config["dataset_creator"]["sequence_length_target"]
 
     def preprocess(self, chunk):
         input = []
@@ -42,6 +42,7 @@ class DatasetCreator():
                 answer_processed = get_length_adjusted_sequence(answer_processed, desired_length=self.sequence_length_input,  padding_pos="back", trimming_pos="front")
                 context_processed = get_length_adjusted_sequence(context_processed, desired_length=self.sequence_length_input,  padding_pos="back", trimming_pos="front")
                 question_processed = get_length_adjusted_sequence(question_processed, desired_length=self.sequence_length_target, padding_pos="back", trimming_pos="back")
+                question_processed = to_categorical(question_processed, self.vocab.get_vocab_size())
 
                 #Check if answer was not trimmed and encoded correctly
                 if (max(answer_processed) > 0):
@@ -79,24 +80,24 @@ class DatasetCreator():
         return(dataset_train, dataset_dev)
 
 
-vocab = Vocabulary()
+#vocab = Vocabulary()
 #embedder = Embedder()
 
 
-dataset_creator = DatasetCreator(vocab)
-dataset_train, dataset_dev = dataset_creator.create_datasets()
+#dataset_creator = DatasetCreator(vocab)
+#dataset_train, dataset_dev = dataset_creator.create_datasets()
 
 
 
-start = time.time()
+#start = time.time()
 
-for i, data in enumerate(dataset_train):
-    print(data)
-    if i > 1:
-        break
+#for i, data in enumerate(dataset_train):
+#    print(data)
+#    if i > 1:
+#        break
 
 
-print("{} time pased".format(time.time() - start))
+#print("{} time pased".format(time.time() - start))
 
 '''
     def preprocess_tokens(self, doc, max_seq_len):

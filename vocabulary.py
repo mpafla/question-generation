@@ -4,9 +4,9 @@ from collections import Counter
 from utils.constants import Constants
 
 class Vocabulary:
-    def __init__(self):
-        self.vocabulary_size = 20000
-        self.vocab_path = "data/vocab.pickle"
+    def __init__(self, config):
+        self.vocabulary_size = config["vocabulary"]["vocabulary_size"]
+        self.vocab_path = config["vocabulary"]["vocab_path"]
         self.vocab = None
         self.vocab_limited = None
         self.index2token = {}
@@ -35,8 +35,8 @@ class Vocabulary:
         self.initialize_index_vocabularies()
 
     def initialize_index_vocabularies(self):
-        self.index2token = Constants.index2special_token
-        self.token2index = Constants.special_token2index
+        self.index2token = Constants.index2special_token.copy()
+        self.token2index = Constants.special_token2index.copy()
         number_of_special_tokens = len(self.index2token.keys())
         for i, token in enumerate(self.vocab_limited.keys(), number_of_special_tokens):
             self.token2index[token] = i
@@ -47,6 +47,9 @@ class Vocabulary:
             return(self.token2index[token])
         else:
             return(self.token2index[Constants.UNK])
+
+    def get_vocab_size(self):
+        return(len(self.index2token.keys()))
 
     def get_token_for_index(self, index):
         return(self.index2token[index])

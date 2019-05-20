@@ -3,10 +3,14 @@ import numpy as np
 from gensim import models
 from gensim.models import KeyedVectors
 from tensorflow.python.keras.utils import to_categorical
+from utils.constants import Constants
 
 class Embedder():
-    def __init__(self):
-        self.wv_path = "models/google_wv"
+    def __init__(self, vocab, config):
+        self.wv_path = config["embedder"]["wv_path"]
+        self.google_w2v_path = config["embedder"]["google_w2v_path"]
+        self.vocab = vocab
+
 
         try:
             print("Loading {}".format(self.wv_path))
@@ -15,10 +19,9 @@ class Embedder():
             print("Loaded in {} sec".format(time.time() - start_time_loading))
         except:
             print("Loading failed")
-            w2v_path = 'models/GoogleNews-vectors-negative300.bin'
-            print("Loading {} into memory". format(w2v_path))
+            print("Loading {} into memory". format(self.google_w2v_path))
             start_time_loading = time.time()
-            w2v = models.KeyedVectors.load_word2vec_format(w2v_path, binary=True)
+            w2v = models.KeyedVectors.load_word2vec_format(self.google_w2v_path, binary=True)
             print("Loaded in {} sec".format(time.time() - start_time_loading))
 
             self.wv = w2v.wv
@@ -30,11 +33,8 @@ class Embedder():
 
         self.embedding_dim = self.wv[self.wv.index2word[0]].shape[0]
         self.index_len = len(self.wv.index2word)
-        self.SOS = "<SOS>"
-        self.EOS = "<EOS>"
-        self.UNK = "<UNK>"
-        self.PAD = "<PAD>"
-        self.special_tokens_list = [self.SOS, self.EOS, self.UNK, self.PAD]
+
+        self.special_tokens_list = list(Constants.special_token2index.keys())
         self.number_of_special_tokens = len(self.special_tokens_list)
         self.special_tokens = []
         for i, special_token in enumerate(self.special_tokens_list):
@@ -55,30 +55,54 @@ class Embedder():
         if special_token is not None:
             return (special_token[encoding])
         else:
-            return (self._get_data_for_special_token(self.UNK, "token")[encoding])
+            return (self._get_data_for_special_token(Constants.UNK, "token")[encoding])
 
     def from_token(self, token, encoding):
-        token_in_vocab = self.wv.vocab.get(token)
-        if token_in_vocab is not None:
-            if encoding == "index":
-                return(token_in_vocab.index)
-            elif encoding == "wv":
-                return(np.append(self.wv[token], np.zeros(self.number_of_special_tokens)))
+        #token_in_vocab = self.wv.vocab.get(token)
+        #if token_in_vocab is not None:
+        if self.vocab.is_token_in_vocabulary(token):
+            token_in_vocab = self.wv.vocab.get(token)
+            if token_in_vocab is not None:
+                if encoding == "index":
+                    return(token_in_vocab.index)
+                elif encoding == "wv":
+                    return(np.append(self.wv[token], np.zeros(self.number_of_special_tokens)))
+            else:
+                return (self.get_special_token(token, encoding))
         else:
-            return(self.get_special_token(token, encoding))
+            #raise Exception("Token {} is not part of vocabulary.".format(token))
+            return (self.get_special_token(token, encoding))
+
 
     def from_index(self, index, encoding):
-        if index < self.index_len:
-            if(encoding == "token"):
-                return(self.wv.index2word[index])
+        if index < self.vocab.get_vocab_size():
+            token = self.vocab.get_token_for_index(index)
+            if encoding == "token":
+                return(token)
             elif encoding == "wv":
-                return(np.append(self.wv[self.wv.index2word[index]], np.zeros(self.number_of_special_tokens)))
+                return(self.from_token(token, "wv"))
         else:
-            special_token = self._get_data_for_special_token(index, "index")
-            if special_token is not None:
-                return(special_token[encoding])
-            else:
-                raise Exception("Index {} is not part of vocabulary.".format(index))
+            raise Exception("Index {} is not part of vocabulary.".format(index))
+
+    def get_embeddings_matrix(self):
+        vocab_size = self.vocab.get_vocab_size()
+        embeddings_matrix = np.zeros((vocab_size, self.embedding_dim + self.number_of_special_tokens))
+        for i in range(vocab_size):
+            embeddings_matrix[i] = self.from_index(i, "wv")
+        return(embeddings_matrix)
+
+
+        #if index < self.index_len:
+        #    if(encoding == "token"):
+        #        return(self.wv.index2word[index])
+        #    elif encoding == "wv":
+        #        return(np.append(self.wv[self.wv.index2word[index]], np.zeros(self.number_of_special_tokens)))
+        #else:
+        #    special_token = self._get_data_for_special_token(index, "index")
+        #    if special_token is not None:
+        #        return(special_token[encoding])
+        #    else:
+        #        raise Exception("Index {} is not part of vocabulary.".format(index))
 
 #embedder = Embedder()
 
