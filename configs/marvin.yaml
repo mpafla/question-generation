@@ -8,6 +8,7 @@ vocabulary:
     vocabulary_size: 20000
     vocab_path: "data/vocab.pickle"
 embedder:
-    wv_path: "models/google_wv"
-    google_w2v_path: "models/GoogleNews-vectors-negative300.bin"
+    wv_path: "models/embeddings/google_wv"
+    google_w2v_path: "models/embeddings/GoogleNews-vectors-negative300.bin"
+    embeddings_matrix_path: "data/embeddings_matrix.pickle"
 ...

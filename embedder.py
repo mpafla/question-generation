@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import pickle
 from gensim import models
 from gensim.models import KeyedVectors
 from tensorflow.python.keras.utils import to_categorical
@@ -9,9 +10,10 @@ class Embedder():
     def __init__(self, vocab, config):
         self.wv_path = config["embedder"]["wv_path"]
         self.google_w2v_path = config["embedder"]["google_w2v_path"]
+        self.embeddings_matrix_path = config["embedder"]["embeddings_matrix_path"]
         self.vocab = vocab
 
-
+    def load_embeddings_model(self):
         try:
             print("Loading {}".format(self.wv_path))
             start_time_loading = time.time()
@@ -84,13 +86,30 @@ class Embedder():
         else:
             raise Exception("Index {} is not part of vocabulary.".format(index))
 
-    def get_embeddings_matrix(self):
+    def create_embeddings_matrix(self):
         vocab_size = self.vocab.get_vocab_size()
-        embeddings_matrix = np.zeros((vocab_size, self.embedding_dim + self.number_of_special_tokens))
+        self.embeddings_matrix = np.zeros((vocab_size, self.embedding_dim + self.number_of_special_tokens))
         for i in range(vocab_size):
-            embeddings_matrix[i] = self.from_index(i, "wv")
-        return(embeddings_matrix)
+            self.embeddings_matrix[i] = self.from_index(i, "wv")
 
+    def get_embeddings_matrix(self):
+        try:
+            self.load_embeddings_matrix()
+        except:
+            self.load_embeddings_model()
+            self.create_embeddings_matrix()
+            print("Embeddings matrix created")
+            self.save_embeddings_matrix()
+            print("Embeddings matrix saved")
+        return(self.embeddings_matrix)
+
+    def save_embeddings_matrix(self):
+        with open(self.embeddings_matrix_path, 'wb') as handle:
+            pickle.dump(self.embeddings_matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_embeddings_matrix(self):
+        with open(self.embeddings_matrix_path, 'rb') as handle:
+            self.embeddings_matrix = pickle.load(handle)
 
         #if index < self.index_len:
         #    if(encoding == "token"):
