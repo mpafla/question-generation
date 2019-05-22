@@ -1,7 +1,26 @@
 ---
+model:
+    file_name: "gru_bahdanau"
+    class_name: "GRU_Bahdanau"
+    random_seed: 2019
+    gru_hidden_states: 512
+    attention_layer_units: 10
+trainer:
+    epochs: 15
+    batch_size: 4
+    shuffle_buffer_size: 4
+    learning_rate: 0.0001
+    #keras.losses
+    loss_function: CategoricalCrossentropy
+    #tf.optimizers
+    optimizer: RMSprop
+    accuracy: CategoricalAccuracy
+    loss_metric: Mean
+    training: True
+    save_after: 3
 dataset_creator:
     sequence_length_input: 200
-    sequence_length_target: 30
+    sequence_length_target: 20
     folder_prefix_train: "data/train/"
     folder_prefix_dev: "data/dev/"
 vocabulary:
