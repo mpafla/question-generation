@@ -43,10 +43,14 @@ class Trainer():
         loss = 0
         answers = input[:,0]
         contexts = input[:, 1]
-        targets = np.argmax(target_one_hot, axis=2)
+
+        print(input)
+        targets = tf.math.argmax(target_one_hot, axis=2)
 
         with tf.GradientTape() as tape:
-            enc_output, enc_hidden = encoder.call([answers, contexts])
+            enc_output, enc_hidden = encoder([answers, contexts])
+
+        '''
 
             dec_hidden = enc_hidden
 
@@ -87,10 +91,12 @@ class Trainer():
         else:
             self.test_loss(batch_loss)
             self.test_accuracy(target_one_hot, target_predictions)
+        
 
         return (target_predictions)
+        '''
 
-
+    @tf.function
     def train(self, model, dataset_train, dataset_test):
         dataset_train = dataset_train.shuffle(self.shuffle_buffer_size).batch(self.batch_size).prefetch(self.batch_size)
         dataset_test = dataset_test.batch(self.batch_size)
@@ -133,8 +139,8 @@ class Trainer():
             with open("models/diagnostics.txt", "a") as text_file:
                 print(self.diagnostics(epoch, step), file=text_file)
 
-            if (epoch % self.save_after == 0):
-                checkpoint.save(file_prefix=checkpoint_prefix)
+            #if (epoch % self.save_after == 0):
+            #    checkpoint.save(file_prefix=checkpoint_prefix)
 
         '''
         for data in dataset_train:

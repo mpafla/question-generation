@@ -1,7 +1,9 @@
 .idea/*
-models/*
+models/saved_models/*
+models/embeddings/*
 data/*
 !data/data_cleaned.csv
 venv/*
 __pycache__/*
+models/__pycache__/*
 *.pyc
