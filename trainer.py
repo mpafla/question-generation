@@ -13,6 +13,7 @@ class Trainer():
         self.epochs = config["trainer"]["epochs"]
         self.save_after = config["trainer"]["save_after"]
         self.batch_size = config["trainer"]["batch_size"]
+        self.prefetch = config["trainer"]["prefetch"]
         self.shuffle_buffer_size = config["trainer"]["shuffle_buffer_size"]
         self.learning_rate = config["trainer"]["learning_rate"]
         self.loss_function = getattr(tf.keras.losses, config["trainer"]["loss_function"])()
@@ -38,13 +39,14 @@ class Trainer():
         return diagnostics
 
     @tf.function
-    def run_through_step(self, encoder, decoder, input, target_one_hot, training=True):
+    def run_through_step(self, encoder, decoder, input, target, target_one_hot, training=True):
         start = time.time()
         loss = 0
         answers = input[:,0]
         contexts = input[:, 1]
 
-        targets = tf.math.argmax(target_one_hot, axis=2)
+        #targets = tf.math.argmax(target_one_hot, axis=2)
+        targets = target
 
         with tf.GradientTape() as tape:
             enc_output, enc_hidden = encoder.call([answers, contexts])
@@ -109,7 +111,7 @@ class Trainer():
 
 
     def train(self, model, dataset_train, dataset_test):
-        dataset_train = dataset_train.shuffle(self.shuffle_buffer_size).batch(self.batch_size).prefetch(self.batch_size)
+        dataset_train = dataset_train.shuffle(self.shuffle_buffer_size).batch(self.batch_size).prefetch(self.prefetch)
         dataset_test = dataset_test.batch(self.batch_size)
 
         encoder, decoder = model.get_encoder_and_decoder()
@@ -128,9 +130,10 @@ class Trainer():
             print("Training the model")
             for data in dataset_train:
                 input = data[0]
-                target_one_hot = data[1]
+                target = data[1]
+                target_one_hot = data[2]
 
-                self.run_through_step(encoder, decoder, input, target_one_hot, training=True)
+                self.run_through_step(encoder, decoder, input, target, target_one_hot, training=True)
                 step = step + 1
 
                 # if (step % 10 == 0):
@@ -140,9 +143,10 @@ class Trainer():
             print("Getting accuracy from test dataset")
             for data in dataset_test:
                 input = data[0]
-                target_one_hot = data[1]
+                target = data[1]
+                target_one_hot = data[2]
 
-                self.run_through_step(encoder, decoder, input, target_one_hot, training=False)
+                self.run_through_step(encoder, decoder, input, target, target_one_hot, training=False)
 
             print(self.diagnostics(epoch, step))
             print('Time taken for training this epoch is {} sec'.format(time.time() - start))

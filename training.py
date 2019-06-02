@@ -39,6 +39,10 @@ def main():
 
     trainer.train(model, dataset_train, dataset_dev)
 
+    #for data in dataset_train:
+    #    print(data)
+    #    break
+
 
 if __name__ == "__main__":
     main()

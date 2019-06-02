@@ -24,6 +24,7 @@ class DatasetCreator():
     def preprocess(self, chunk):
         input = []
         target = []
+        target_one_hot = []
 
         for paragraph in chunk["paragraphs"]:
             context = paragraph["context"]
@@ -42,14 +43,16 @@ class DatasetCreator():
                 answer_processed = get_length_adjusted_sequence(answer_processed, desired_length=self.sequence_length_input,  padding_pos="back", trimming_pos="front")
                 context_processed = get_length_adjusted_sequence(context_processed, desired_length=self.sequence_length_input,  padding_pos="back", trimming_pos="front")
                 question_processed = get_length_adjusted_sequence(question_processed, desired_length=self.sequence_length_target, padding_pos="back", trimming_pos="back")
-                question_processed = to_categorical(question_processed, self.vocab.get_vocab_size())
+                question_processed_one_hot = to_categorical(question_processed, self.vocab.get_vocab_size())
 
                 #Check if answer was not trimmed and encoded correctly
                 if (max(answer_processed) > 0):
                     input.append((answer_processed, context_processed))
                     target.append(question_processed)
+                    target_one_hot.append(question_processed_one_hot)
+                    #target.append((question_processed, question_processed_one_hot))
 
-        return input, target
+        return input, target, target_one_hot
 
     def load_and_preprocess(self, chunk_path, files_folder):
 
@@ -63,12 +66,13 @@ class DatasetCreator():
         return self.preprocess(chunk)
 
     def create_sub_dataset(self, chunk_path, files_folder):
-        input, target = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],  [tf.float32, tf.float32])
+        input, target, target_one_hot = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],  [tf.float32, tf.float32, tf.float32])
 
         input_dataset = tf.data.Dataset.from_tensor_slices(input)
         target_dataset = tf.data.Dataset.from_tensor_slices(target)
+        target_one_hot_dataset = tf.data.Dataset.from_tensor_slices(target_one_hot)
 
-        data_set = tf.data.Dataset.zip((input_dataset, target_dataset))
+        data_set = tf.data.Dataset.zip((input_dataset, target_dataset, target_one_hot_dataset))
         return data_set
 
     def create_datasets(self):
