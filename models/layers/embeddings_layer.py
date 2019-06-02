@@ -6,6 +6,7 @@ def get_embeddings_layer(embeddings_matrix):
     embedding_layer = Embedding(vocab_size,
                       embeddings_dim,
                       mask_zero=False,
-                      weights=[embeddings_matrix],
-                      trainable=False)
+                      #weights=[embeddings_matrix],
+                      #trainable=False)
+                      trainable = True)
     return embedding_layer

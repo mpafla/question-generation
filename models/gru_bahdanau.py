@@ -1,8 +1,8 @@
 import tensorflow as tf
 from models.base_model import BaseModel
 from models.layers.bahdanau_attention_layer import BahdanauAttentionLayer
-#from models.layers.embeddings_layer import get_embeddings_layer
-from tensorflow.python.keras.layers import Input, CuDNNGRU, Add, Dense, Embedding
+from models.layers.embeddings_layer import get_embeddings_layer
+from tensorflow.python.keras.layers import Input, Add, Dense, GRU
 from tensorflow.python.keras.models import Model
 
 class GRU_Bahdanau(BaseModel):
@@ -13,29 +13,19 @@ class GRU_Bahdanau(BaseModel):
 
         super(GRU_Bahdanau, self).__init__(config, embeddings_matrix)
 
-    def get_embeddings_layer(self, embeddings_matrix):
-        vocab_size = embeddings_matrix.shape[0]
-        embeddings_dim = embeddings_matrix.shape[1]
-        embedding_layer = Embedding(vocab_size,
-                                    embeddings_dim,
-                                    mask_zero=False,
-                                    weights=[embeddings_matrix],
-                                    trainable=False)
-        return embedding_layer
-
     def set_up_model(self):
         encoder_input_answers = Input(shape=(None,))
         encoder_input_sources = Input(shape=(None,))
-        encoder_embedding_answers = self.get_embeddings_layer(self.embeddings_matrix)(encoder_input_answers)
-        encoder_embedding_source = self.get_embeddings_layer(self.embeddings_matrix)(encoder_input_sources)
+        encoder_embedding_answers = get_embeddings_layer(self.embeddings_matrix)(encoder_input_answers)
+        encoder_embedding_source = get_embeddings_layer(self.embeddings_matrix)(encoder_input_sources)
         encoder_input = Add()([encoder_embedding_answers, encoder_embedding_source])
-        encoder_gru = CuDNNGRU(self.gru_hidden_states, return_sequences=True, return_state=True)
+        encoder_gru = GRU(self.gru_hidden_states, return_sequences=True, return_state=True)
         encoder_output, state_h_encoder = encoder_gru(encoder_input)
 
         # encoder_states = [state_h, state_c]
 
         decoder_input_questions = Input(shape=(None,))
-        decoder_embedding_questions = self.get_embeddings_layer(self.embeddings_matrix)(decoder_input_questions)
+        decoder_embedding_questions = get_embeddings_layer(self.embeddings_matrix)(decoder_input_questions)
 
         decoder_hidden_states_input = Input(shape=(self.gru_hidden_states,))
         # print(decoder_hidden_states_input.shape)
@@ -52,7 +42,7 @@ class GRU_Bahdanau(BaseModel):
         # print(decoder_inputs.shape)
         # decoder_input_attention = tf.concat([context_vector, decoder_embedding_questions],axis=-1)
 
-        decoder_gru = CuDNNGRU(self.gru_hidden_states, return_sequences=True, return_state=True)
+        decoder_gru = GRU(self.gru_hidden_states, return_sequences=True, return_state=True)
         decoder__gru_outputs, decoder_gru_hidden = decoder_gru(decoder_inputs)
         decoder__gru_outputs = tf.reshape(decoder__gru_outputs, (-1, decoder__gru_outputs.shape[2]))
         # decoder_outputs_flattend = Flatten()(decoder_outputs)
@@ -63,8 +53,7 @@ class GRU_Bahdanau(BaseModel):
         # model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
         # model.summary()
 
-        #encoder = Model([encoder_input_answers, encoder_input_sources], [encoder_output, state_h_encoder])
-        encoder = Model([encoder_input_answers, encoder_input_sources], [encoder_embedding_answers, encoder_embedding_source])
+        encoder = Model([encoder_input_answers, encoder_input_sources], [encoder_output, state_h_encoder])
         encoder.compile(optimizer='rmsprop', loss='categorical_crossentropy')
         encoder.summary()
 
