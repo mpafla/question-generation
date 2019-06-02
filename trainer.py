@@ -65,14 +65,12 @@ class Trainer():
 
                 predictions_exp = tf.expand_dims(predictions, 1)
 
-                print(target_predictions)
 
                 if target_predictions is None:
                     target_predictions = predictions_exp
                 else:
                     target_predictions = tf.concat([target_predictions, predictions_exp], axis= 1)
 
-                print(target_predictions)
 
                 #print(predictions)
                 #print(target_predictions)
@@ -81,8 +79,6 @@ class Trainer():
                 #target_predictions[:, t].assign(predictions)
 
                 loss += self.loss_function(target_one_hot[:, t], predictions)
-
-                tf.print(loss)
 
                 # if training:
                 #    train_accuracy(target_one_hot[:, t], predictions)
@@ -98,9 +94,7 @@ class Trainer():
         if training:
             try:
                 variables = encoder.trainable_variables + decoder.trainable_variables
-                print(variables)
                 gradients = tape.gradient(loss, variables)
-                print(gradients)
                 self.optimizer.apply_gradients(zip(gradients, variables))
                 self.train_accuracy(target_one_hot, target_predictions)
                 self.train_loss(batch_loss)
@@ -159,11 +153,3 @@ class Trainer():
             #if (epoch % self.save_after == 0):
             #    checkpoint.save(file_prefix=checkpoint_prefix)
 
-        '''
-        for data in dataset_train:
-            input = data[0]
-            target_one_hot = data[1]
-
-            self.run_through_step(encoder, decoder, input, target_one_hot, training=True)
-            break
-        '''
