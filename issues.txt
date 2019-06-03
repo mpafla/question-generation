@@ -1,7 +1,7 @@
 word2vec:
 	Trained with own data -> not as good
-	Use Google's w2v -> don't know how to include padding or unk
-	Potential solution: Use Google's model, create embeddings matrix but add another dimension for each special token (https://stackoverflow.com/questions/41881605/what-should-be-the-word-vectors-of-token-pad-unknown-go-eos-before-se)
+	This works: Use Google's model, create embeddings matrix but add another dimension for each special token (https://stackoverflow.com/questions/41881605/what-should-be-the-word-vectors-of-token-pad-unknown-go-eos-before-se)
+	Problem: Cannot include embeddings matrix in keras Embedding because of tf.function
 
 likelihood as a decoding objective (greedy):
 	repetitive and strange
