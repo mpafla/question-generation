@@ -59,13 +59,9 @@ class Trainer():
                 enc_output, enc_hidden = encoder.call([answers, contexts])
 
                 dec_hidden = enc_hidden
-
-                if target_one_hot.shape[0] is None:
-                    tf.print(target_one_hot)
                 dec_input = tf.expand_dims([self.vocab.get_index_for_token(Constants.SOS)] * target_one_hot.shape[0], 1)
-                # dec_input = to_categorical([special_token2index(vocabulary_size - 4, SOS)] * BATCH_SIZE)
 
-                #target_predictions = tf.Variable(np.zeros(target_one_hot.shape), dtype=tf.float32)
+
                 target_predictions = None
 
                 # Teacher forcing - feeding the target as the next input
@@ -94,6 +90,8 @@ class Trainer():
 
             batch_loss = (loss / int(targets.shape[1]))
 
+
+
             if training:
                 try:
                     variables = encoder.trainable_variables + decoder.trainable_variables
@@ -106,6 +104,8 @@ class Trainer():
             else:
                 self.test_loss(batch_loss)
                 self.test_accuracy(target_one_hot, target_predictions)
+                
+
 
 
 
@@ -126,7 +126,7 @@ class Trainer():
             step = 0
             start = time.time()
 
-            print("Training the model")
+            print("Loading data")
             for data in dataset_train:
                 self.run_through_step(encoder, decoder, data, training=True)
                 step = step + 1

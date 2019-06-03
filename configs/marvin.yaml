@@ -32,7 +32,7 @@ data_preprocessor:
     chunks_included_train: 100
     #max is 47
     chunks_included_dev: 1
-    cycle_length: 4
+    cycle_length: 1
     spacy_model: "en_core_web_sm"
     squad_train_path: "data/train-v1.1.json"
     squad_dev_path: "data/dev-v1.1.json"
