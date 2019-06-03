@@ -39,79 +39,78 @@ class Trainer():
         return diagnostics
 
     @tf.function
-    def run_through_step(self, encoder, decoder, input, target, target_one_hot, training=True):
-        start = time.time()
-        loss = 0
-        answers = input[:,0]
-        contexts = input[:, 1]
+    def run_through_step(self, encoder, decoder, data, training=True):
+        input = data[0]
+        target = data[1]
+        target_one_hot = data[2]
 
-        #targets = tf.math.argmax(target_one_hot, axis=2)
-        targets = target
+        #Check if batch size is correct
+        if target_one_hot.shape[0] == self.batch_size:
 
-        with tf.GradientTape() as tape:
-            enc_output, enc_hidden = encoder.call([answers, contexts])
+            start = time.time()
+            loss = 0
+            answers = input[:,0]
+            contexts = input[:, 1]
 
-            dec_hidden = enc_hidden
+            #targets = tf.math.argmax(target_one_hot, axis=2)
+            targets = target
 
-            dec_input = tf.expand_dims([self.vocab.get_index_for_token(Constants.SOS)] * target_one_hot.shape[0], 1)
-            # dec_input = to_categorical([special_token2index(vocabulary_size - 4, SOS)] * BATCH_SIZE)
+            with tf.GradientTape() as tape:
+                enc_output, enc_hidden = encoder.call([answers, contexts])
 
-            #target_predictions = tf.Variable(np.zeros(target_one_hot.shape), dtype=tf.float32)
-            target_predictions = None
+                dec_hidden = enc_hidden
 
-            # Teacher forcing - feeding the target as the next input
-            for t in range(target_one_hot.shape[1]):
-                # passing enc_output to the decoder
+                if target_one_hot.shape[0] is None:
+                    tf.print(target_one_hot)
+                dec_input = tf.expand_dims([self.vocab.get_index_for_token(Constants.SOS)] * target_one_hot.shape[0], 1)
+                # dec_input = to_categorical([special_token2index(vocabulary_size - 4, SOS)] * BATCH_SIZE)
 
-                predictions, dec_hidden = decoder.call([dec_input, dec_hidden, enc_output])
+                #target_predictions = tf.Variable(np.zeros(target_one_hot.shape), dtype=tf.float32)
+                target_predictions = None
 
-                predictions_exp = tf.expand_dims(predictions, 1)
+                # Teacher forcing - feeding the target as the next input
+                for t in range(target_one_hot.shape[1]):
+                    # passing enc_output to the decoder
 
+                    predictions, dec_hidden = decoder.call([dec_input, dec_hidden, enc_output])
 
-                if target_predictions is None:
-                    target_predictions = predictions_exp
-                else:
-                    target_predictions = tf.concat([target_predictions, predictions_exp], axis= 1)
-
-
-                #print(predictions)
-                #print(target_predictions)
-                #print(target_predictions[:, t])
-
-                #target_predictions[:, t].assign(predictions)
-
-                loss += self.loss_function(target_one_hot[:, t], predictions)
-
-                # if training:
-                #    train_accuracy(target_one_hot[:, t], predictions)
-                # else:
-                #    test_accuracy(target_one_hot[:, t], predictions)
-
-                # using teacher forcing
-                dec_input = tf.expand_dims(targets[:, t], 1)
-
-        batch_loss = (loss / int(targets.shape[1]))
+                    predictions_exp = tf.expand_dims(predictions, 1)
 
 
-        if training:
-            try:
-                variables = encoder.trainable_variables + decoder.trainable_variables
-                gradients = tape.gradient(loss, variables)
-                self.optimizer.apply_gradients(zip(gradients, variables))
-                self.train_accuracy(target_one_hot, target_predictions)
-                self.train_loss(batch_loss)
-            except:
-                print("Optimazation could not be performed")
-        else:
-            self.test_loss(batch_loss)
-            self.test_accuracy(target_one_hot, target_predictions)
+                    if target_predictions is None:
+                        target_predictions = predictions_exp
+                    else:
+                        target_predictions = tf.concat([target_predictions, predictions_exp], axis= 1)
 
-        return (target_predictions)
+                    loss += self.loss_function(target_one_hot[:, t], predictions)
+
+                    # if training:
+                    #    train_accuracy(target_one_hot[:, t], predictions)
+                    # else:
+                    #    test_accuracy(target_one_hot[:, t], predictions)
+
+                    # using teacher forcing
+                    dec_input = tf.expand_dims(targets[:, t], 1)
+
+            batch_loss = (loss / int(targets.shape[1]))
+
+            if training:
+                try:
+                    variables = encoder.trainable_variables + decoder.trainable_variables
+                    gradients = tape.gradient(loss, variables)
+                    self.optimizer.apply_gradients(zip(gradients, variables))
+                    self.train_accuracy(target_one_hot, target_predictions)
+                    self.train_loss(batch_loss)
+                except:
+                    print("Optimazation could not be performed")
+            else:
+                self.test_loss(batch_loss)
+                self.test_accuracy(target_one_hot, target_predictions)
 
 
 
     def train(self, model, dataset_train, dataset_test):
-        dataset_train = dataset_train.shuffle(self.shuffle_buffer_size).batch(self.batch_size).prefetch(self.prefetch)
+        dataset_train = dataset_train.batch(self.batch_size).prefetch(tf.data.experimental.AUTOTUNE)
         dataset_test = dataset_test.batch(self.batch_size)
 
         encoder, decoder = model.get_encoder_and_decoder()
@@ -129,11 +128,7 @@ class Trainer():
 
             print("Training the model")
             for data in dataset_train:
-                input = data[0]
-                target = data[1]
-                target_one_hot = data[2]
-
-                self.run_through_step(encoder, decoder, input, target, target_one_hot, training=True)
+                self.run_through_step(encoder, decoder, data, training=True)
                 step = step + 1
 
                 # if (step % 10 == 0):
@@ -142,11 +137,7 @@ class Trainer():
 
             print("Getting accuracy from test dataset")
             for data in dataset_test:
-                input = data[0]
-                target = data[1]
-                target_one_hot = data[2]
-
-                self.run_through_step(encoder, decoder, input, target, target_one_hot, training=False)
+                self.run_through_step(encoder, decoder, data, training=False)
 
             print(self.diagnostics(epoch, step))
             print('Time taken for training this epoch is {} sec'.format(time.time() - start))

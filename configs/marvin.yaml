@@ -8,7 +8,7 @@ model:
 trainer:
     epochs: 15
     batch_size: 4
-    prefetch: 16
+    prefetch: 4
     shuffle_buffer_size: 4
     learning_rate: 0.0001
     #keras.losses
@@ -19,11 +19,6 @@ trainer:
     loss_metric: Mean
     training: True
     save_after: 3
-dataset_creator:
-    sequence_length_input: 200
-    sequence_length_target: 20
-    folder_prefix_train: "data/train/"
-    folder_prefix_dev: "data/dev/"
 vocabulary:
     vocabulary_size: 20000
     vocab_path: "data/vocab.pickle"
@@ -31,4 +26,18 @@ embedder:
     wv_path: "models/embeddings/google_wv"
     google_w2v_path: "models/embeddings/GoogleNews-vectors-negative300.bin"
     embeddings_matrix_path: "data/embeddings_matrix.pickle"
+data_preprocessor:
+    preprocess: False
+    #max is 441
+    chunks_included_train: 100
+    #max is 47
+    chunks_included_dev: 1
+    cycle_length: 4
+    spacy_model: "en_core_web_sm"
+    squad_train_path: "data/train-v1.1.json"
+    squad_dev_path: "data/dev-v1.1.json"
+    sequence_length_input: 200
+    sequence_length_target: 20
+    folder_prefix_train: "data/train/"
+    folder_prefix_dev: "data/dev/"
 ...

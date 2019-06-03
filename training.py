@@ -5,27 +5,27 @@ import time
 import numpy as np
 
 from vocabulary import Vocabulary
-from dataset_creator import DatasetCreator
 from embedder import Embedder
 from trainer import Trainer
+from data_preprocessor import DataPreprocessor
 import tensorflow as tf
 from models.layers.embeddings_layer import get_embeddings_layer
 from utils.constants import Constants
 from tensorflow.python.keras.metrics import CategoricalAccuracy
 
-#@tf.function
+
 def main():
     configs_path = sys.argv[1:][0]
     with open(configs_path, 'r') as file:
         config = yaml.safe_load(file)
 
-    model_file_name = "models." + config["model"]["file_name"]
-    model_class_name = config["model"]["class_name"]
-
     vocab = Vocabulary(config)
 
-    dataset_creator = DatasetCreator(vocab, config)
-    dataset_train, dataset_dev = dataset_creator.create_datasets()
+    data_preprocessor = DataPreprocessor(vocab, config)
+    dataset_train, dataset_dev = data_preprocessor.create_datasets()
+
+    model_file_name = "models." + config["model"]["file_name"]
+    model_class_name = config["model"]["class_name"]
 
     embedder = Embedder(vocab, config)
     embeddings_matrix = embedder.get_embeddings_matrix()
@@ -35,13 +35,10 @@ def main():
 
     trainer = Trainer(config, vocab)
 
-    #print(tf.autograph.to_code(trainer.train.python_function))
-
     trainer.train(model, dataset_train, dataset_dev)
 
-    #for data in dataset_train:
-    #    print(data)
-    #    break
+
+
 
 
 if __name__ == "__main__":

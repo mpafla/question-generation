@@ -10,3 +10,6 @@ likelihood as a decoding objective (greedy):
 	
 
 attention:
+
+data_generation:
+	change data format in tensorflow liked format and not pickle

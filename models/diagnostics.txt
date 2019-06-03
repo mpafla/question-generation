@@ -81,3 +81,10 @@ Epoch: 3/15, Step: Tensor("ReduceDataset_4:0", shape=(), dtype=int32)/24500, Los
 Epoch: 4/15, Step: Tensor("ReduceDataset_6:0", shape=(), dtype=int32)/24500, Loss: Tensor("Identity_28:0", shape=(), dtype=float32), Accuracy: Tensor("mul_14:0", shape=(), dtype=float32), Test Loss: Tensor("Identity_30:0", shape=(), dtype=float32), Test Accuracy: Tensor("mul_15:0", shape=(), dtype=float32)
 Epoch: 5/15, Step: Tensor("ReduceDataset_8:0", shape=(), dtype=int32)/24500, Loss: Tensor("Identity_36:0", shape=(), dtype=float32), Accuracy: Tensor("mul_18:0", shape=(), dtype=float32), Test Loss: Tensor("Identity_38:0", shape=(), dtype=float32), Test Accuracy: Tensor("mul_19:0", shape=(), dtype=float32)
 Epoch: 6/15, Step: Tensor("ReduceDataset_10:0", shape=(), dtype=int32)/24500, Loss: Tensor("Identity_44:0", shape=(), dtype=float32), Accuracy: Tensor("mul_22:0", shape=(), dtype=float32), Test Loss: Tensor("Identity_46:0", shape=(), dtype=float32), Test Accuracy: Tensor("mul_23:0", shape=(), dtype=float32)
+Epoch: 1/15, Step: 60/24500, Loss: 9.883481979370117, Accuracy: 32.457984924316406, Test Loss: 0.0, Test Accuracy: 0.0
+Epoch: 2/15, Step: 60/24500, Loss: 9.864194869995117, Accuracy: 40.157562255859375, Test Loss: 0.0, Test Accuracy: 0.0
+Epoch: 1/15, Step: 60/24500, Loss: 9.882013320922852, Accuracy: 36.02941131591797, Test Loss: 0.0, Test Accuracy: 0.0
+Epoch: 1/15, Step: 60/24500, Loss: 9.88336181640625, Accuracy: 24.264705657958984, Test Loss: 9.869140625, Test Accuracy: 43.82432556152344
+Epoch: 1/15, Step: 60/24500, Loss: 9.884718894958496, Accuracy: 34.533897399902344, Test Loss: 9.871118545532227, Test Accuracy: 44.70945739746094
+Epoch: 2/15, Step: 60/24500, Loss: 9.866602897644043, Accuracy: 41.430084228515625, Test Loss: 9.871118545532227, Test Accuracy: 44.70945739746094
+Epoch: 1/15, Step: 808/24500, Loss: 9.671366691589355, Accuracy: 52.48453140258789, Test Loss: 9.483485221862793, Test Accuracy: 50.35135269165039
