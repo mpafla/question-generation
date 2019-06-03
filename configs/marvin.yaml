@@ -1,11 +1,13 @@
 ---
 model:
-    file_name: "gru_bahdanau"
+    file_name: "models.gru_bahdanau"
     class_name: "GRU_Bahdanau"
     random_seed: 2019
     gru_hidden_states: 512
     attention_layer_units: 10
 trainer:
+    file_name: "trainers.trainer_gru_bahdanau"
+    class_name: "TrainerGRUBahdanau"
     epochs: 15
     batch_size: 4
     prefetch: 4
