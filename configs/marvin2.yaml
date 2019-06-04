@@ -1,7 +1,7 @@
 ---
 model:
-    file_name: "models.gru_bahdanau"
-    class_name: "GRU_Bahdanau"
+    file_name: "models.transformer"
+    class_name: "Transformer"
     random_seed: 2019
     gru_hidden_states: 512
     attention_layer_units: 10
@@ -22,7 +22,7 @@ trainer:
     training: True
     save_after: 3
 vocabulary:
-    vocabulary_size: 20000
+    vocabulary_size: 10000
     vocab_path: "data/vocab.pickle"
 embedder:
     wv_path: "models/embeddings/google_wv"
