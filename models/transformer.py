@@ -12,6 +12,7 @@ class Transformer():
         angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
         return pos * angle_rates
 
+    #https://datascience.stackexchange.com/questions/51065/what-is-positional-encoding-in-transformer-model
     def positional_encoding(self, position, d_model):
         angle_rads = self.get_angles(np.arange(position)[:, np.newaxis],
                                 np.arange(d_model)[np.newaxis, :],
