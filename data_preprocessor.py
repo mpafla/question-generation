@@ -74,7 +74,7 @@ class DataPreprocessor():
 
     def preprocess_chunk(self, chunk):
         input = []
-        target = []
+        #target = []
         target_one_hot = []
 
         for paragraph in chunk["paragraphs"]:
@@ -82,34 +82,39 @@ class DataPreprocessor():
             context_tokenized = [context.vocab.strings[token.lower] for token in context] + [Constants.EOS]
             context_processed = [self.vocab.get_index_for_token(token) for token in context_tokenized]
 
-            for qa in paragraph["qas"]:
-                question = qa["question"]
-                question_tokenized = [question.vocab.strings[token.lower] for token in question] + [Constants.EOS]
-                question_processed = [self.vocab.get_index_for_token(token) for token in question_tokenized]
+            if len(context_tokenized) < self.sequence_length_input:
 
-                answer = qa["answers"][0]["text"]
-                answer_tokenized = [answer.vocab.strings[token.lower] for token in answer]
-                answer_processed, answer_start, answer_end = get_answer_processed(answer_tokenized, context_tokenized)
+                for qa in paragraph["qas"]:
+                    question = qa["question"]
+                    question_tokenized = [Constants.SOS] + [question.vocab.strings[token.lower] for token in question] + [Constants.EOS]
+                    question_processed = [self.vocab.get_index_for_token(token) for token in question_tokenized]
 
-                answer_processed = get_length_adjusted_sequence(answer_processed, desired_length=self.sequence_length_input,
-                                                                padding_pos="back", trimming_pos="front")
-                context_processed = get_length_adjusted_sequence(context_processed,
-                                                                 desired_length=self.sequence_length_input,
-                                                                 padding_pos="back", trimming_pos="front")
-                question_processed = get_length_adjusted_sequence(question_processed,
-                                                                  desired_length=self.sequence_length_target,
-                                                                  padding_pos="back", trimming_pos="back")
-                question_processed_one_hot = to_categorical(question_processed, self.vocab.get_vocab_size())
+                    if len(question_tokenized) < self.sequence_length_target:
 
-                # Check if answer was not trimmed and encoded correctly
-                if (max(answer_processed) > 0):
-                    input.append((answer_processed, context_processed))
-                    target.append(question_processed)
-                    #target_one_hot.append(question_processed)
-                    target_one_hot.append(question_processed_one_hot)
-                    # target.append((question_processed, question_processed_one_hot))
+                        answer = qa["answers"][0]["text"]
+                        answer_tokenized = [answer.vocab.strings[token.lower] for token in answer]
+                        answer_processed, answer_start, answer_end = get_answer_processed(answer_tokenized, context_tokenized)
 
-        return input, target, target_one_hot
+                        answer_processed = get_length_adjusted_sequence(answer_processed, desired_length=self.sequence_length_input,
+                                                                        padding_pos="back", trimming_pos="front")
+                        context_processed = get_length_adjusted_sequence(context_processed,
+                                                                         desired_length=self.sequence_length_input,
+                                                                         padding_pos="back", trimming_pos="front")
+                        question_processed = get_length_adjusted_sequence(question_processed,
+                                                                          desired_length=self.sequence_length_target,
+                                                                          padding_pos="back", trimming_pos="back")
+                        question_processed_one_hot = to_categorical(question_processed, self.vocab.get_vocab_size())
+
+                        # Check if answer was not trimmed and encoded correctly
+                        if (max(answer_processed) > 0):
+                            input.append((answer_processed, context_processed))
+                            #target.append(question_processed)
+                            target_one_hot.append(question_processed)
+                            #target_one_hot.append(question_processed_one_hot)
+                            # target.append((question_processed, question_processed_one_hot))
+
+        #return input, target, target_one_hot
+        return input, target_one_hot
 
 
     def load_and_preprocess(self, chunk_path, files_folder):
@@ -124,14 +129,14 @@ class DataPreprocessor():
 
 
     def create_sub_dataset(self, chunk_path, files_folder):
-        input, target, target_one_hot = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],
-                                                       [tf.float32, tf.float32, tf.float32])
+        input,  target_one_hot = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],
+                                                       [tf.float32, tf.float32])
 
         input_dataset = tf.data.Dataset.from_tensor_slices(input)
-        target_dataset = tf.data.Dataset.from_tensor_slices(target)
+        #target_dataset = tf.data.Dataset.from_tensor_slices(target)
         target_one_hot_dataset = tf.data.Dataset.from_tensor_slices(target_one_hot)
 
-        data_set = tf.data.Dataset.zip((input_dataset, target_dataset, target_one_hot_dataset))
+        data_set = tf.data.Dataset.zip((input_dataset, target_one_hot_dataset))
         return data_set
 
 

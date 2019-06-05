@@ -2,22 +2,29 @@
 model:
     file_name: "models.transformer"
     class_name: "Transformer"
-    random_seed: 2019
-    gru_hidden_states: 512
-    attention_layer_units: 10
+    num_layers: 4
+    d_model: 128
+    num_heads: 8
+    dff: 512
+    input_vocab_size: 10000
+    target_vocab_size: 10000
+    dropout_rate: 0.1
 trainer:
     file_name: "trainers.trainer_transformer"
     class_name: "TrainerTransformer"
-    epochs: 15
-    batch_size: 4
+    epochs: 1
+    batch_size: 2
     prefetch: 4
     shuffle_buffer_size: 4
     learning_rate: 0.0001
     #keras.losses
-    loss_function: CategoricalCrossentropy
+    loss_function: SparseCategoricalCrossentropy
     #tf.optimizers
-    optimizer: RMSprop
-    accuracy: CategoricalAccuracy
+    optimizer: Adam
+    beta_1: 0.9
+    beta_2: 0.98
+    epsilon: 1e-9
+    accuracy: SparseCategoricalAccuracy
     loss_metric: Mean
     training: True
     save_after: 3
@@ -31,7 +38,7 @@ embedder:
 data_preprocessor:
     preprocess: False
     #max is 441
-    chunks_included_train: 100
+    chunks_included_train: 1
     #max is 47
     chunks_included_dev: 1
     cycle_length: 1
@@ -39,7 +46,7 @@ data_preprocessor:
     squad_train_path: "data/train-v1.1.json"
     squad_dev_path: "data/dev-v1.1.json"
     sequence_length_input: 200
-    sequence_length_target: 20
+    sequence_length_target: 30
     folder_prefix_train: "data/train/"
     folder_prefix_dev: "data/dev/"
 ...

@@ -26,12 +26,11 @@ class Trainer():
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
         self.training = config["trainer"]["training"]
 
-    def diagnostics(self, epoch, step):
-        template = 'Epoch: {}/{}, Step: {}/{}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'
+    def diagnostics(self, epoch, batch):
+        template = 'Epoch: {}/{}, Batch: {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'
         diagnostics = template.format(epoch + 1,
                                       self.epochs,
-                                      step,
-                                      int(98000 / self.batch_size),
+                                      batch,
                                       self.train_loss.result(),
                                       self.train_accuracy.result() * 100,
                                       self.test_loss.result(),
@@ -39,7 +38,5 @@ class Trainer():
         return diagnostics
 
 
-
-
-        def train(self, model, dataset_train, dataset_test):
-            raise Exception("Train method not implemented")
+    def train(self, model, dataset_train, dataset_test):
+        raise Exception("Train method not implemented")
