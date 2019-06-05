@@ -12,8 +12,8 @@ model:
 trainer:
     file_name: "trainers.trainer_transformer"
     class_name: "TrainerTransformer"
-    epochs: 1
-    batch_size: 2
+    epochs: 50
+    batch_size: 8
     prefetch: 4
     shuffle_buffer_size: 4
     learning_rate: 0.0001
@@ -38,9 +38,9 @@ embedder:
 data_preprocessor:
     preprocess: False
     #max is 441
-    chunks_included_train: 1
+    chunks_included_train: 100
     #max is 47
-    chunks_included_dev: 1
+    chunks_included_dev: 10
     cycle_length: 1
     spacy_model: "en_core_web_sm"
     squad_train_path: "data/train-v1.1.json"

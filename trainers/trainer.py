@@ -25,12 +25,23 @@ class Trainer():
         self.checkpoint_dir = 'models/saved_models/' + config["model"]["file_name"]
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
         self.training = config["trainer"]["training"]
+        self.number_of_batches = -1
+        self.number_of_batches_string = "?"
+        self.max_number_of_batches_fount = False
 
-    def diagnostics(self, epoch, batch):
-        template = 'Epoch: {}/{}, Batch: {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'
+    def diagnostics(self, epoch, batch=-1):
+        if not self.max_number_of_batches_fount:
+            if batch > self.number_of_batches:
+                self.number_of_batches = batch
+            else:
+                self.number_of_batches_string = str(self.number_of_batches)
+                self.max_number_of_batches_fount = True
+
+        template = 'Epoch: {}/{}, Batch: {}/{}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'
         diagnostics = template.format(epoch + 1,
                                       self.epochs,
                                       batch,
+                                      self.number_of_batches_string,
                                       self.train_loss.result(),
                                       self.train_accuracy.result() * 100,
                                       self.test_loss.result(),

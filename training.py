@@ -25,7 +25,7 @@ def main():
     model_class_name = config["model"]["class_name"]
 
     module = __import__(model_file_name, fromlist=[model_class_name])
-    model = getattr(module, model_class_name)(config, embeddings_matrix)
+    model = getattr(module, model_class_name)(config, embeddings_matrix, vocab)
 
     trainer_file_name = config["trainer"]["file_name"]
     trainer_class_name = config["trainer"]["class_name"]

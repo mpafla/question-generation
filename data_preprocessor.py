@@ -103,7 +103,7 @@ class DataPreprocessor():
                         question_processed = get_length_adjusted_sequence(question_processed,
                                                                           desired_length=self.sequence_length_target,
                                                                           padding_pos="back", trimming_pos="back")
-                        question_processed_one_hot = to_categorical(question_processed, self.vocab.get_vocab_size())
+                        #question_processed_one_hot = to_categorical(question_processed, self.vocab.get_vocab_size())
 
                         # Check if answer was not trimmed and encoded correctly
                         if (max(answer_processed) > 0):

@@ -7,14 +7,14 @@ from models.layers.decoder import Decoder
 
 
 class Transformer(Model):
-    def __init__(self, config, embeddings_layer):
+    def __init__(self, config, embeddings_layer, vocab):
         super(Transformer, self).__init__()
         self.num_layers = config["model"]["num_layers"]
         self.d_model = config["model"]["d_model"]
         self.num_heads = config["model"]["num_heads"]
         self.dff = config["model"]["dff"]
-        self.input_vocab_size = config["model"]["input_vocab_size"]
-        self.target_vocab_size = config["model"]["target_vocab_size"]
+        self.input_vocab_size = vocab.get_vocab_size()
+        self.target_vocab_size = vocab.get_vocab_size()
         self.dropout_rate = config["model"]["dropout_rate"]
         self.embeddings_layer = embeddings_layer
 
