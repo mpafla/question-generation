@@ -6,8 +6,6 @@ from vocabulary import Vocabulary
 from embedder import Embedder
 from data_preprocessor import DataPreprocessor
 
-
-
 def main():
     configs_path = sys.argv[1:][0]
     with open(configs_path, 'r') as file:
@@ -33,10 +31,7 @@ def main():
     module = __import__(trainer_file_name, fromlist=[trainer_class_name])
     trainer = getattr(module, trainer_class_name)(config, vocab)
 
-
     trainer.train(model, dataset_train, dataset_dev)
-
-
 
 if __name__ == "__main__":
     main()

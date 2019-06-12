@@ -1,10 +1,13 @@
 import string
 import numpy as np
 import spacy
+import tensorflow as tf
 from nltk.tokenize import word_tokenize
 from functools import reduce
 from tensorflow.python.keras.utils import to_categorical
+from tensorflow.python.keras.preprocessing.sequence import pad_sequences
 nlp = spacy.load("en_core_web_sm")
+
 
 from utils.constants import Constants
 
@@ -68,6 +71,12 @@ def get_answer_processed(answer, context):
 
     #answer_processed = self.pad_or_trim_sequence(list(answer_processed), pad="back", trim="front", seq_length=self.sequence_length_input)
     return answer_processed, answer_start, answer_end
+
+def pad_one_sequence(sequence, length, dtype='int32', padding='post', truncating='pre', value=0.0):
+    sequence = tf.expand_dims(sequence, axis=0)
+    sequence_padded = pad_sequences(sequence, length, dtype, padding, truncating, value)
+    sequence_padded = tf.squeeze(sequence_padded, axis=0)
+    return(sequence_padded)
 
 #foo = list(range(10))
 #bar = "hello i am very hungry what about you".split()

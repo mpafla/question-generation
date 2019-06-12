@@ -19,9 +19,9 @@ class TrainerTransformer(Trainer):
         self.loss_object = SparseCategoricalCrossentropy(from_logits=True, reduction='none')
 
     @tf.function
-    def train_step(self, input, target, model, training):
-        input_answer = input[:, 0]
-        input_context = input[:, 1]
+    def train_step(self, input, feature, target, model, training):
+        input_context = input
+
         target_input = target[:, :-1]
         target_real = target[:, 1:]
 
@@ -34,13 +34,6 @@ class TrainerTransformer(Trainer):
                                          combined_mask,
                                          dec_padding_mask)
 
-
-            #real_string = [self.vocab.get_token_for_index(index.numpy()) for index in target_real[0]]
-            #print(real_string)
-
-            #pred = np.argmax(predictions, axis=2)
-            #pred_string = [self.vocab.get_token_for_index(index) for index in pred[0]]
-            #print(pred_string)
 
             loss = self.loss_function(target_real, predictions)
 
@@ -74,21 +67,23 @@ class TrainerTransformer(Trainer):
         for epoch in range(self.epochs):
             start = time.time()
 
-            for (batch, (input, target)) in enumerate(dataset_train):
+            for (batch, (input, feature, target)) in enumerate(dataset_train):
 
-                self.train_step(input, target, model, training=True)
+                self.train_step(input, feature, target, model, training=True)
 
                 if batch % 100 == 0:
                     print(self.diagnostics(epoch, batch))
                     self.train_loss.reset_states()
                     self.train_accuracy.reset_states()
 
+                #break
+
 
             self.test_loss.reset_states()
             self.test_accuracy.reset_states()
 
-            for (batch, (input, target)) in enumerate(dataset_dev):
-                self.train_step(input, target, model, training=False)
+            for (batch, (input, feature, target)) in enumerate(dataset_dev):
+                self.train_step(input, feature, target, model, training=False)
 
             print(self.diagnostics(epoch))
 
@@ -98,6 +93,8 @@ class TrainerTransformer(Trainer):
             #                                                        ckpt_save_path))
 
             print('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
+
+            #break
 
 
     def create_masks(self, inp, tar):

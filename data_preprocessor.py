@@ -6,6 +6,7 @@ import pickle
 import tensorflow as tf
 from utils.constants import Constants
 from utils.preprocessing import *
+from tensorflow.python.keras.utils import to_categorical
 
 class DataPreprocessor():
     def __init__(self, vocab, config):
@@ -21,12 +22,18 @@ class DataPreprocessor():
         self.sequence_length_input = config["data_preprocessor"]["sequence_length_input"]
         self.sequence_length_target = config["data_preprocessor"]["sequence_length_target"]
 
+        self.spacy_model = config["data_preprocessor"]["spacy_model"]
+        self.nlp = spacy.load(self.spacy_model)
+
+        self.pos_list = list(nlp.tokenizer.vocab.morphology.tag_map.keys())
+        #reserve 0 index for padding
+        #self.pos_list.insert(0, "PAD")
+        self.number_of_pos = len(self.pos_list)
+
 
         if self.preprocess:
             self.squad_train_path = config["data_preprocessor"]["squad_train_path"]
             self.squad_dev_path = config["data_preprocessor"]["squad_dev_path"]
-            self.spacy_model = config["data_preprocessor"]["spacy_model"]
-            self.nlp = spacy.load(self.spacy_model)
 
             print("Loading raw data")
             self.load_raw_data()
@@ -74,47 +81,51 @@ class DataPreprocessor():
 
     def preprocess_chunk(self, chunk):
         input = []
-        #target = []
-        target_one_hot = []
+        feature = []
+        target = []
 
         for paragraph in chunk["paragraphs"]:
             context = paragraph["context"]
             context_tokenized = [context.vocab.strings[token.lower] for token in context] + [Constants.EOS]
-            context_processed = [self.vocab.get_index_for_token(token) for token in context_tokenized]
 
+            #check if context is within limit
             if len(context_tokenized) < self.sequence_length_input:
+                context_indexed = [self.vocab.get_index_for_token(token) for token in context_tokenized]
 
                 for qa in paragraph["qas"]:
                     question = qa["question"]
                     question_tokenized = [Constants.SOS] + [question.vocab.strings[token.lower] for token in question] + [Constants.EOS]
-                    question_processed = [self.vocab.get_index_for_token(token) for token in question_tokenized]
 
+                    # check if question is witin limit
                     if len(question_tokenized) < self.sequence_length_target:
+                        question_indexed = [self.vocab.get_index_for_token(token) for token in question_tokenized]
 
                         answer = qa["answers"][0]["text"]
                         answer_tokenized = [answer.vocab.strings[token.lower] for token in answer]
                         answer_processed, answer_start, answer_end = get_answer_processed(answer_tokenized, context_tokenized)
+                        answer_expanded = tf.expand_dims(answer_processed, axis=1)
 
-                        answer_processed = get_length_adjusted_sequence(answer_processed, desired_length=self.sequence_length_input,
-                                                                        padding_pos="back", trimming_pos="front")
-                        context_processed = get_length_adjusted_sequence(context_processed,
-                                                                         desired_length=self.sequence_length_input,
-                                                                         padding_pos="back", trimming_pos="front")
-                        question_processed = get_length_adjusted_sequence(question_processed,
-                                                                          desired_length=self.sequence_length_target,
-                                                                          padding_pos="back", trimming_pos="back")
-                        #question_processed_one_hot = to_categorical(question_processed, self.vocab.get_vocab_size())
-
-                        # Check if answer was not trimmed and encoded correctly
+                        # check if there is at least one answer word
                         if (max(answer_processed) > 0):
-                            input.append((answer_processed, context_processed))
-                            #target.append(question_processed)
-                            target_one_hot.append(question_processed)
+
+                            #plus one to have index 0 reserved for padding
+                            pos_tags_context = [to_categorical(self.pos_list.index(token.tag_), num_classes=self.number_of_pos, dtype="int32") for token in context] + [[0] * self.number_of_pos]
+                            pos_tags_context = tf.convert_to_tensor(pos_tags_context)
+
+                            features = tf.concat([answer_expanded, pos_tags_context], axis=1)
+
+                            context_padded = pad_one_sequence(context_indexed, self.sequence_length_input)
+                            features_padded = pad_one_sequence(features, self.sequence_length_input)
+                            question_padded = pad_one_sequence(question_indexed, self.sequence_length_target)
+
+                            input.append(context_padded)
+                            feature.append(features_padded)
+                            target.append(question_padded)
                             #target_one_hot.append(question_processed_one_hot)
                             # target.append((question_processed, question_processed_one_hot))
 
-        #return input, target, target_one_hot
-        return input, target_one_hot
+        #return input, target_one_hot
+        return input, feature, target
 
 
     def load_and_preprocess(self, chunk_path, files_folder):
@@ -129,14 +140,15 @@ class DataPreprocessor():
 
 
     def create_sub_dataset(self, chunk_path, files_folder):
-        input,  target_one_hot = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],
-                                                       [tf.float32, tf.float32])
+        input, feature, target_one_hot = tf.py_function(self.load_and_preprocess, [chunk_path, files_folder],
+                                                       [tf.float32, tf.int32, tf.float32])
 
         input_dataset = tf.data.Dataset.from_tensor_slices(input)
-        #target_dataset = tf.data.Dataset.from_tensor_slices(target)
+        feature_dataset = tf.data.Dataset.from_tensor_slices(feature)
         target_one_hot_dataset = tf.data.Dataset.from_tensor_slices(target_one_hot)
 
-        data_set = tf.data.Dataset.zip((input_dataset, target_one_hot_dataset))
+        #data_set = tf.data.Dataset.zip((input_dataset, target_one_hot_dataset))
+        data_set = tf.data.Dataset.zip((input_dataset, feature_dataset, target_one_hot_dataset))
         return data_set
 
 
