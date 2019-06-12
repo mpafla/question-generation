@@ -3,12 +3,13 @@ model:
     file_name: "models.transformer"
     class_name: "Transformer"
     num_layers: 4
-    d_model: 128
+    d_model: 512
     num_heads: 8
     dff: 512
     input_vocab_size: 10000
     target_vocab_size: 10000
     dropout_rate: 0.1
+    number_of_features: 51
 trainer:
     file_name: "trainers.trainer_transformer"
     class_name: "TrainerTransformer"
@@ -28,6 +29,7 @@ trainer:
     loss_metric: Mean
     training: True
     save_after: 3
+    checkpoint_path: "models/saved_models/transformer"
 vocabulary:
     vocabulary_size: 10000
     vocab_path: "data/vocab.pickle"
@@ -38,9 +40,9 @@ embedder:
 data_preprocessor:
     preprocess: False
     #max is 441
-    chunks_included_train: 100
+    chunks_included_train: 2
     #max is 47
-    chunks_included_dev: 10
+    chunks_included_dev: 1
     cycle_length: 1
     spacy_model: "en_core_web_sm"
     squad_train_path: "data/train-v1.1.json"

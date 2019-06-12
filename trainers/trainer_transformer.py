@@ -17,6 +17,7 @@ class TrainerTransformer(Trainer):
         self.epsilon = config["trainer"]["epsilon"]
         self.optimizer = getattr(tf.optimizers, config["trainer"]["optimizer"])(self.learning_rate_schedule, self.beta_1, self.beta_2, 1e-9)
         self.loss_object = SparseCategoricalCrossentropy(from_logits=True, reduction='none')
+        self.checkpoint_path = config["trainer"]["checkpoint_path"]
 
     @tf.function
     def train_step(self, input, feature, target, model, training):
@@ -28,7 +29,7 @@ class TrainerTransformer(Trainer):
         enc_padding_mask, combined_mask, dec_padding_mask = self.create_masks(input_context, target_input)
 
         with tf.GradientTape() as tape:
-            predictions, _ = model(input_context, target_input,
+            predictions, _ = model(input_context, feature, target_input,
                                          training,
                                          enc_padding_mask,
                                          combined_mask,
@@ -57,6 +58,13 @@ class TrainerTransformer(Trainer):
         return tf.reduce_mean(loss_)
 
     def train(self, model, dataset_train, dataset_dev):
+
+        ckpt = tf.train.Checkpoint(transformer=model,
+                                   optimizer=self.optimizer)
+
+        ckpt_manager = tf.train.CheckpointManager(ckpt, self.checkpoint_path, max_to_keep=5)
+
+
         dataset_train = dataset_train.batch(self.batch_size).prefetch(tf.data.experimental.AUTOTUNE)
         dataset_dev = dataset_dev.batch(self.batch_size)
 
@@ -87,10 +95,10 @@ class TrainerTransformer(Trainer):
 
             print(self.diagnostics(epoch))
 
-            #if (epoch + 1) % 5 == 0:
-            #    ckpt_save_path = ckpt_manager.save()
-            #   print('Saving checkpoint for epoch {} at {}'.format(epoch + 1,
-            #                                                        ckpt_save_path))
+            if (epoch + 1) % 2 == 0:
+                ckpt_save_path = ckpt_manager.save()
+                print('Saving checkpoint for epoch {} at {}'.format(epoch + 1,
+                                                                    ckpt_save_path))
 
             print('Time taken for 1 epoch: {} secs\n'.format(time.time() - start))
 
