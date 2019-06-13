@@ -1,6 +1,6 @@
 # question-generation
 
-Include `GoogleNews-vectors-negative300.bin` into `models/embeddings/`. Some folders might need to be created the first time the program, too.
+Include `GoogleNews-vectors-negative300.bin` into `models/embeddings/`. 
 
 Run the program by
 ```
