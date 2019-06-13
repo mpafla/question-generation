@@ -1,6 +1,7 @@
 # question-generation
 
-Include `GoogleNews-vectors-negative300.bin` into `models/embeddings/`. 
+## Prerequisites
+Install the required packages in `anaconda/environment.yml` with Anaconda. Include `GoogleNews-vectors-negative300.bin` into `models/embeddings/`. 
 
 Run the program by
 ```
