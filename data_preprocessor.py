@@ -30,10 +30,16 @@ class DataPreprocessor():
         #self.pos_list.insert(0, "PAD")
         self.number_of_pos = len(self.pos_list)
 
+        dir_path = os.path.abspath(os.path.dirname(__file__))
+        os.makedirs(dir_path + "/" +  self.folder_prefix_train, exist_ok=True)
+        os.makedirs(dir_path + "/" + self.folder_prefix_dev, exist_ok=True)
+
 
         if self.preprocess:
             self.squad_train_path = config["data_preprocessor"]["squad_train_path"]
             self.squad_dev_path = config["data_preprocessor"]["squad_dev_path"]
+
+
 
             print("Loading raw data")
             self.load_raw_data()

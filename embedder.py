@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import pickle
+import os
 from gensim import models
 from gensim.models import KeyedVectors
 from tensorflow.python.keras.utils import to_categorical
@@ -12,6 +13,10 @@ class Embedder():
         self.google_w2v_path = config["embedder"]["google_w2v_path"]
         self.embeddings_matrix_path = config["embedder"]["embeddings_matrix_path"]
         self.vocab = vocab
+
+        dir_path = os.path.abspath(os.path.dirname(__file__))
+        os.makedirs(dir_path + "/models/embeddings/", exist_ok=True)
+
 
     def load_embeddings_model(self):
         try:
