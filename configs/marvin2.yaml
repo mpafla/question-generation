@@ -38,7 +38,7 @@ embedder:
     google_w2v_path: "models/embeddings/GoogleNews-vectors-negative300.bin"
     embeddings_matrix_path: "data/embeddings_matrix.pickle"
 data_preprocessor:
-    preprocess: True
+    preprocess: False
     #max is 441
     chunks_included_train: 2
     #max is 47
